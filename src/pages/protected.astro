@@ -2,15 +2,16 @@
 import { firebase } from "@/firebase/config";
 import MainLayout from "@/layouts/MainLayout.astro";
 
-const firebaseUser = firebase.auth.currentUser;
+const {user, isLoggedIn} = Astro.locals;
 
-if(firebaseUser === null) {
-  // Redirect to login page if user is not authenticated
-  return Astro.redirect("/login");
+if(!isLoggedIn || !user) {
+  return Astro.redirect('/login');
 }
+const { name, email, avatar } = user;
 
-const { displayName, email, emailVerified, photoURL } = firebaseUser;
-const name = displayName ?? "No display name";
+const firebaseUser = firebase.auth.currentUser;
+await firebaseUser?.reload();
+const { emailVerified } = firebaseUser!;
 ---
 
 <MainLayout>
@@ -19,10 +20,10 @@ const name = displayName ?? "No display name";
     <div class="bg-gray-200 font-sans min-h-[600px] w-full flex flex-row justify-center items-center">
       <div class="card w-96 mx-auto bg-white  shadow-xl hover:shadow">
         {
-          photoURL ? (
+          avatar ? (
             <img 
               class="w-32 mx-auto rounded-full -mt-20 border-8 border-white" 
-              src={ photoURL } 
+              src={ avatar } 
               alt={`Avatar de ${name}`}
             />
           ) : (

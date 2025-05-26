@@ -60,6 +60,16 @@ const rememberMe = !!email;
         >
           Ingresar
         </button>
+        <div class="flex flex-1 w-full my-2">
+          <div class="w-full border-t-2 border-gray-200"></div>
+        </div>
+        <button 
+          type="button"
+          id="btn-google" 
+          class="disabled:bg-gray-300 w-full flex justify-center bg-red-400  hover:bg-red-500 text-gray-100 p-3  rounded-full tracking-wide font-semibold  shadow-lg cursor-pointer transition ease-in duration-500"
+        >
+          Ingresar con Google
+        </button>
       </div>
     </form>
     <div class="pt-3 text-center text-gray-400 text-sm">
@@ -71,11 +81,14 @@ const rememberMe = !!email;
 </AuthLayout>
 
 <script>
+  import { firebase } from "@/firebase/config";
   import { actions } from "astro:actions";
+  import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
   import Swal from "sweetalert2";
 
   const form = document.querySelector('form');
   const btnSubmit = form.querySelector('#btn-submit');
+  const btnGoogle = form.querySelector('#btn-google');
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -98,6 +111,40 @@ const rememberMe = !!email;
     }
 
     window.location.replace('/');
+  });
+
+  btnGoogle?.addEventListener('click', async () => {
+    btnGoogle?.setAttribute('disabled', 'disabled');
+    const provicer = new GoogleAuthProvider();
+
+    try {
+
+      // Paso 1: Obetner las credenciales del cliente
+      const credentials = await signInWithPopup(firebase.auth, provicer);
+      
+      // Paso 2: Verificar las credenciales en el backend
+      const { error } = await actions.loginWithGoogle(credentials);
+
+      if(error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al iniciar sesión con Google',
+          text: error.message,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Ok'
+        });
+        btnGoogle?.removeAttribute('disabled');
+        return;
+      }
+
+      btnGoogle.innerHTML = 'Redireccionando...';
+      window.location.replace('/');
+
+    } catch (error) {
+      console.log(error)
+      btnGoogle.removeAttribute('disabled');
+    }
   });
 
 </script>
